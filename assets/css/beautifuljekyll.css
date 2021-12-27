@@ -341,6 +341,7 @@ img {
     border-radius: 50%;
   {% endunless %}
   display: block;
+  image-rendering: -webkit-optimize-contrast;
 }
 
 .navbar-custom.top-nav-expanded .avatar-container {
