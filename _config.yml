@@ -255,3 +255,16 @@ plugins:
 # Beautiful Jekyll / Dean Attali
 # 2fc73a3a967e97599c9763d05e564189
 
+projects:
+  - name: GitHub Checker
+    description: Google Chrome extension that doesn't let you miss a pull request review on GitHub.
+    image: /assets/img/projects/github-checker.svg
+    url: https://chrome.google.com/webstore/detail/github-checker/aablgilgiligfphhiboookbdipjaiiag
+  - name: Astronomy Picture of the Day Wallpaper
+    description: Cross-platform desktop application built with <a href="https://www.electronjs.org/" target="_blank">Electron</a> that automatically changes your wallpaper to an amazing cosmic picture of the day ✨
+    image: /assets/img/projects/apod.png
+    url: https://github.com/nicolasiensen/apod-wallpaper
+  - name: T-Inbox
+    description: Google Chrome extension to receive tweets and organize them just like as an inbox.
+    image: /assets/img/projects/t-inbox.jpg
+    url: https://chrome.google.com/webstore/detail/t-inbox/dlccigflknbfnemfkoejhaepgoeoaajd
