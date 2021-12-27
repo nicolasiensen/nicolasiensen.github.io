@@ -1,0 +1,19 @@
+<p>Below is a list of projects I've created to keep my mind busy during my spare time.</p>
+
+{% for project in site.projects %}
+  <div class="posts-list">
+    <article class="post-preview">
+      <div class="post-image post-image-normal">
+        <a href="{{project.url}}" target="_blank" aria-label="Thumbnail">
+          <img src="{{project.image}}" alt="{{project.name}}">
+        </a>
+      </div>
+      <a href="{{project.url}}" target="_blank">
+        <h2 class="post-title">{{project.name}}</h2>
+      </a>
+      <div class="post-entry">
+        {{project.description}}
+      </div>
+    </article>
+  </div>
+{% endfor %}
