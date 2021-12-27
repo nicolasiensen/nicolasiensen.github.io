@@ -257,7 +257,7 @@ plugins:
 
 projects:
   - name: GitHub Checker
-    description: Google Chrome extension that doesn't let you miss a pull request review on GitHub.
+    description: Google Chrome extension that displays at a glance the number of pull requests waiting for your review on GitHub.
     image: /assets/img/projects/github-checker.svg
     url: https://chrome.google.com/webstore/detail/github-checker/aablgilgiligfphhiboookbdipjaiiag
   - name: Astronomy Picture of the Day Wallpaper
@@ -265,6 +265,6 @@ projects:
     image: /assets/img/projects/apod.png
     url: https://github.com/nicolasiensen/apod-wallpaper
   - name: T-Inbox
-    description: Google Chrome extension to receive tweets and organize them just like as an inbox.
+    description: Google Chrome extension that displays the latest tweets from accounts you follow organized like an inbox.
     image: /assets/img/projects/t-inbox.jpg
     url: https://chrome.google.com/webstore/detail/t-inbox/dlccigflknbfnemfkoejhaepgoeoaajd
