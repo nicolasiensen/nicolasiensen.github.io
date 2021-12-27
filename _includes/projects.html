@@ -1,7 +1,7 @@
 <p>Below is a list of projects I've created to keep my mind busy during my spare time.</p>
 
-{% for project in site.projects %}
-  <div class="posts-list">
+<div class="posts-list">
+  {% for project in site.projects %}
     <article class="post-preview">
       <div class="post-image post-image-normal">
         <a href="{{project.url}}" target="_blank" aria-label="Thumbnail">
@@ -15,5 +15,5 @@
         {{project.description}}
       </div>
     </article>
-  </div>
-{% endfor %}
+  {% endfor %}
+</div>
