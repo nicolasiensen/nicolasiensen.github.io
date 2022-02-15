@@ -1,0 +1,23 @@
+---
+layout: home
+title: Personal projects
+subtitle: A list of personal projects that keep my mind busy during my spare time
+---
+
+<div class="posts-list">
+  {% for project in site.projects %}
+    <article class="post-preview">
+      <div class="post-image post-image-normal">
+        <a href="{{project.url}}" target="_blank" aria-label="Thumbnail">
+          <img src="{{project.image}}" alt="{{project.name}}">
+        </a>
+      </div>
+      <a href="{{project.url}}" target="_blank">
+        <h2 class="post-title">{{project.name}}</h2>
+      </a>
+      <div class="post-entry">
+        {{project.description}}
+      </div>
+    </article>
+  {% endfor %}
+</div>

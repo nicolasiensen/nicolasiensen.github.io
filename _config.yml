@@ -14,6 +14,7 @@ author: Nícolas Iensen
 # --- List of links in the navigation bar --- #
 
 navbar-links:
+  Projects: "projects"
   # About Me: "aboutme"
   # Resources:
     # - Beautiful Jekyll: "https://beautifuljekyll.com"
