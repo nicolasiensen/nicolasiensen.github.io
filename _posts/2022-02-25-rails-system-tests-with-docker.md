@@ -5,9 +5,15 @@ share-description: This tutorial explains how to run Rails' system tests using a
 tags: ruby rails docker tutorial system-testing
 ---
 
-System tests allow developers to test the user interaction with the web application.
+Rails offers many options to cover the codebase with automated tests, granting developers a high level of confidence when making changes to the project.
 
-In this tutorial, we will
+One of the options is [system testing](https://guides.rubyonrails.org/testing.html#system-testing). System tests exercise the Rails application from the end-user perspective, which we can use to automate most of the quality assurance process of a product, if not its entirety.
+
+Running system tests from a containerized Rails application is not straightforward since, most likely, the Docker image used to run the Rails application won't have the necessary software required to execute the system test like a web browser.
+
+In this tutorial, we will walkthrough the creation of a Docker-friendly setup to run Rails' system tests.
+
+[My previous blog post](https://nicolasiensen.github.io/2022-02-01-creating-a-new-rails-application-with-docker/) goes through how to generate a new Rails application using Docker, and one could use it to get a Rails application up and running in a Docker container.
 
 Link to Avidi's blog post about all components that are part of the system test
 
