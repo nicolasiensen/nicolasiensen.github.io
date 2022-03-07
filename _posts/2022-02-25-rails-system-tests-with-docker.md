@@ -5,13 +5,13 @@ share-description: This tutorial explains how to run Rails' system tests using a
 tags: ruby rails docker tutorial system-testing
 ---
 
-Rails natively supports many different types of automated tests to give developers a safety net to prevent breaking existing behavior when enacting changes to the project.
+Rails supports many different types of automated tests to give developers a safety net to prevent breaking existing behavior when enacting changes to the project.
 
 The [Rails Guides website](https://guides.rubyonrails.org/testing.html) provides detailed documentation of all types of automated tests supported by the framework.
 
 [System testing](https://guides.rubyonrails.org/testing.html#system-testing) is one of the options we have to cover our codebase with automated testing. System tests exercise the Rails application from the end-user perspective using a web browser. Together with other tests, we can use system testing to automate most of the quality assurance of a product, if not its entirety.
 
-In his excellent blog post ["Rails 6 System Tests, from Top to Bottom"](https://avdi.codes/rails-6-system-tests-from-top-to-bottom/), the great [Avdi Grimm](https://twitter.com/avdi) unravels all the components involved in a system test and how they collaborate to test Rails applications from end-to-end.
+In his excellent blog post ["Rails 6 System Tests, from Top to Bottom"](https://avdi.codes/rails-6-system-tests-from-top-to-bottom/), [Avdi Grimm](https://twitter.com/avdi) unravels all the components involved in a system test and how they collaborate to test Rails applications from end-to-end.
 
 The list below attempts to summarize the blog post mentioned above, but reading the original text is highly recommended:
 
