@@ -25,7 +25,21 @@ The list of components involved in running system tests are:
 
 Running system tests from a containerized Rails application is not straightforward since, most likely, the Docker image used to run the Rails application won't have a web browser installed to execute the system test.
 
-This tutorial will walk through creating a Docker-friendly setup to run Rails' system tests.
+For example, we could install a web browser in the Docker image of the Rails application or configure Rails to use a web browser installed in the host machine. Avdi Grimm wrote about the later approach in the blog post ["Run Rails 6 system tests in Docker using a host browser"](https://avdi.codes/run-rails-6-system-tests-in-docker-using-a-host-browser/).
+
+This tutorial will follow a different approach. We will define a separate container to host the web browser and its respective WebDriver. The gem `selenium-webdriver` will point to the address of the new container so it can interact with the browser.
+
+![app-container-web-browser-container](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/app-container-web-browser-container.png)
+
+The image above illustrates how this strategy will work. The application container will host two processes, one running the Rails application (initialized by Capybara) and the other running the system tests. First, the system test will reach out to the web browser container to send a command (1). Then, in the web browser container, the WebDriver will receive this command and execute the action in the web browser, which will perform a request to the application container (2). Finally, the Rails application will receive and respond to the request (3).
+
+This approach is superior to the others mentioned above because
+We don't bloat the Docker image of the Rails application with web browsers that are only needed to run system tests.
+We don't need to install web browsers on the host machine.
+
+The following image illustrates where each component that plays a role in running system tests will reside:
+
+![app-container-web-browser-container-detailed](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/app-container-web-browser-container-detailed.png)
 
 [In the previous blog post](https://nicolasiensen.github.io/2022-02-01-creating-a-new-rails-application-with-docker/) we generated a new Rails application using Docker, and we will use that as a basis to get a Rails application up and running in a Docker container.
 
