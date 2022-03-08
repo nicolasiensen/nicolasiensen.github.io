@@ -11,15 +11,17 @@ The [Rails Guides website](https://guides.rubyonrails.org/testing.html) provides
 
 [System testing](https://guides.rubyonrails.org/testing.html#system-testing) is one of the options we have to cover our codebase with automated testing. System tests exercise the Rails application from the end-user perspective using a web browser, making it the slowest type of test we can write. Still, system tests give us a higher confidence level that the application works as expected compared to the other tests.
 
-In his excellent blog post ["Rails 6 System Tests, from Top to Bottom"](https://avdi.codes/rails-6-system-tests-from-top-to-bottom/), [Avdi Grimm](https://twitter.com/avdi) unravels all the components involved in a system test and how they collaborate to test Rails applications from end-to-end.
+There are many moving parts involved when running a system test. [Avdi Grimm](https://twitter.com/avdi) did a great job in the blog post ["Rails 6 System Tests, from Top to Bottom"](https://avdi.codes/rails-6-system-tests-from-top-to-bottom/) where he unravels all the components involved in a system test and how they collaborate to test Rails applications from end-to-end.
 
-The list below attempts to summarize the blog post mentioned above, but reading the original text is highly recommended:
+The list below summarizes the blog post mentioned above, but reading the original text is highly recommended.
 
-- [MiniTest](https://github.com/seattlerb/minitest): the default test framework shipped in Rails.
-- [Capybara](https://github.com/teamcapybara/capybara): a Ruby gem that can start and stop the Rails application under test and provides an interface to write tests that interact with the browser.
-- [selenium-webdriver](https://rubygems.org/gems/selenium-webdriver/versions/2.53.4): a Ruby gem that provides a lower-level interface, compared to Capybara's, to interact with the browser.
-- [WebDriver](https://www.selenium.dev/documentation/webdriver/): a software program that interacts with a browser. Each browser has its own WebDriver implementation, like [ChromeDriver](https://chromedriver.chromium.org/), [GeckoDriver (for Firefox)](https://firefox-source-docs.mozilla.org/testing/geckodriver/) and others. Rails includes a gem called [webdrivers](https://github.com/titusfortner/webdrivers), which installs the WebDrivers in the host machine.
+The list of components involved in running system tests are:
+
 - The web browser: Chrome, Firefox, and others.
+- [WebDriver](https://www.selenium.dev/documentation/webdriver/): a software program that allows us to interact with a browser programmatically. Each browser has its own WebDriver implementation, like [ChromeDriver](https://chromedriver.chromium.org/), [GeckoDriver (for Firefox)](https://firefox-source-docs.mozilla.org/testing/geckodriver/) and others. The gem [webdrivers](https://github.com/titusfortner/webdrivers) installs the WebDrivers in the host machine, and Rails includes this gem by default in the Gemfile when generating an application.
+- [selenium-webdriver](https://rubygems.org/gems/selenium-webdriver/versions/2.53.4): a Ruby gem that provides an interface to interact with any WebDriver.
+- [Capybara](https://github.com/teamcapybara/capybara): a Ruby gem that runs the Rails application under test and provides a better interface on top of `selenium-webdriver` to write tests that interact with a web browser.
+- [MiniTest](https://github.com/seattlerb/minitest): the default test framework shipped in Rails.
 
 Running system tests from a containerized Rails application is not straightforward since, most likely, the Docker image used to run the Rails application won't have a web browser installed to execute the system test.
 
