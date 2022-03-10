@@ -115,13 +115,14 @@ bin/rails test:system
 
 Once more, we get an error, but this time it says `Failed to open TCP connection to chrome-server:4444 (getaddrinfo: Name or service not known)`, progress!
 
-## Step 4: Introduce a Docker container to run the web browser
+## Step 4: Introduce a container to run the web browser
 
-The Selenium team creates and maintains a [list of Docker images](https://hub.docker.com/u/selenium) capable of running web browsers inside containers.
+The Selenium team maintains a [list of Docker images](https://hub.docker.com/u/selenium) for running web browsers inside containers.
 
-The image [selenium/standalone-chrome](https://hub.docker.com/r/selenium/standalone-chrome) packages Google Chrome together with its WebDriver. We will use this image to define a new container we will call `chrome-server` and link it together with the `web` container:
+The image [selenium/standalone-chrome](https://hub.docker.com/r/selenium/standalone-chrome) includes Google Chrome and its respective WebDriver, which by default runs on port 4444 as we configured in the step before. We will use this image to define a new docker-compose service we will call `chrome-server` and link it together with the `web` service:
 
 ```yaml
+# ./docker-compose.yml
 services:
   web:
     build: .
@@ -152,15 +153,76 @@ Selenium::WebDriver::Error::UnknownError: unknown error: net::ERR_CONNECTION_REF
     test/system/posts_test.rb:14:in `block in <class:PostsTest>'
 ```
 
-The error is coming from the `selenium-webdriver` gem. It tells us that the Chrome browser installed in the container `chrome-server` fails to access the Rails application running in the container `web`.
+MiniTest captures a screenshot whenever a system test fails, so we can check what the web browser was displaying when the test failed. Rails keeps these screenshots in the folder `tmp/screenshots`, and this is the screenshot of the failing test we had above:
 
-MiniTest captures a screenshot whenever a system test fails, so we can check what the web browser was displaying when the test failed. Rails keeps these screenshots in the folder `tmp/screenshots`, and this is the screenshot of one of the failing tests we had above:
+![failures_test_should_create_post](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/failures_test_should_create_post.png)
+
+The screenshot proves that the system test successfully interacted with the web browser.
+
+The tests fail, though, with less than a helpful message. The `selenium-webdriver` gem raises the error to tell us that the Chrome browser running in the container `chrome-server` failed to access the Rails application running in the container `web`.
 
 ## Step 5: Fix Capybara's configuration
 
+We need to change two settings from Capybara to fix the failing tests.
 
+The first is the server host. By default, Rails binds the server to the IP address *127.0.0.1*, which is only locally accessible, making it impossible for the web browser running in another container to access the Rails application. To fix that, we set Capybara's `server_host` to `0.0.0.0`, which is an IP address accessible over the network.
 
-```
+The second attribute we need to change is the `app_host`. By default, Capybara will use the `server_host` to build the URLs it will instruct the web browser to visit. The problem is that the address `0.0.0.0` in the web browser container doesn't point to the Rails application. So we set `app_host` to the address of the `web` service by using the `HOSTNAME` environment variable plus the port selected by Capybara.
+
+```ruby
+# ./test/test_helper.rb
 Capybara.server_host = "0.0.0.0"
 Capybara.app_host = "http://#{ENV.fetch("HOSTNAME")}:#{Capybara.server_port}"
 ```
+
+We can now rerun the tests, and they should finally pass:
+
+```
+docker-compose run web bin/rails test:system
+```
+
+## Step 6: Watching the tests run
+
+The Docker image we are using to run the web browser contains a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) software installed, enabling us to peek into what is happening in the browser running in the container.
+
+To enable this feature, we have to change the service `chrome-server` to expose the port `7900`, where the VNC client runs:
+
+```
+# ./docker-compose.yml
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+    command: rails s -b 0.0.0.0
+    links:
+      - chrome-server
+  chrome-server:
+    image: selenium/standalone-chrome:96.0
+    ports:
+      - "7900:7900"
+```
+
+After this change, we restart the `chrome-server` service to expose the port `7900`:
+
+```
+docker-compose up chrome-server -d
+```
+
+We can now access [localhost:7900](http://localhost:7900/) and see a page that looks like the image below:
+
+![localhost_7900](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/localhost_7900_.png)
+
+When we click on the button "Connect", we have to provide a password that is "secret" by default.
+
+We can now rerun the system tests and watch the WebDriver simulating all the user interactions programmed in the tests against the browser:
+
+```
+docker-compose run web bin/rails test:system
+```
+
+![system-tests-longest](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/system-tests-longest.gif)
+
+## Conclusion
