@@ -1,8 +1,8 @@
 ---
 layout: post
 title:  "Running Rails' system tests with Docker"
-share-description: This tutorial explains how to run Rails' system tests using a Docker container.
-tags: ruby rails docker tutorial system-testing
+share-description: This tutorial explains how to create a setup to run Rails' system tests using Docker containers.
+tags: ruby rails docker tutorial system-testing selenium capybara webdriver
 ---
 
 Rails supports many different types of automated tests to give developers a safety net to prevent breaking existing behavior when enacting changes to the project.
@@ -199,7 +199,7 @@ We can now rerun the tests, and they should finally pass:
 docker-compose run web bin/rails test:system
 ```
 
-## Step 6: Watching the tests run in the web browser
+## Step 6: Watch the tests run in the web browser
 
 The Docker image we are using to run the web browser contains a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) software installed, enabling us to peek into what is happening in the browser running in the container.
 
@@ -243,7 +243,7 @@ docker-compose run web bin/rails test:system
 
 ![system-tests-longest](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/system-tests-longest.gif)
 
-## Bonus step: Testing with other web browsers
+## Bonus step: Support testing with other web browsers
 
 With a few modifications to the new setup, we can run the system tests using any other web browser supported by Selenium.
 
