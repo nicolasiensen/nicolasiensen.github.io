@@ -135,7 +135,7 @@ driven_by :selenium, using: :chrome, screen_size: [1400, 1400], options: {
 }
 ```
 
-The host chrome-server:4444 doesn't exist yet, but this will be the address of the Chrome WebDriver we will make available for our tests.
+The address chrome-server:4444 doesn't exist yet, but this where we will make the Chrome WebDriver available for our tests later on.
 
 Let's try to rerun the system tests:
 
@@ -151,7 +151,7 @@ Failed to open TCP connection to chrome-server:4444 (getaddrinfo: Name or servic
 
 ## Step 4: Introduce a container to run the web browser
 
-The Selenium team maintains a [list of Docker images](https://hub.docker.com/u/selenium) for running web browsers inside containers.
+The Selenium team maintains a [list of images](https://hub.docker.com/u/selenium) for running web browsers inside Docker containers.
 
 The image [selenium/standalone-chrome](https://hub.docker.com/r/selenium/standalone-chrome) includes Google Chrome and its respective WebDriver, which by default runs on port 4444 as we configured in the step before. We will use this image to define a new docker-compose service we will call chrome-server and link it to the web service:
 
@@ -191,13 +191,15 @@ MiniTest captures a screenshot whenever a system test fails, so we can check wha
 
 ![failures_test_should_create_post](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/failures_test_should_create_post.png)
 
-This screenshot proves that the system test successfully interacted with the web browser, but when the browser couldn't access the Rails application, as we can see in the screenshot.
+This screenshot proves that the test successfully interacted with the web browser, meaning that the new container is working and accessible to the selenium-webdriver gem.
+
+The error we see in the screenshot shows that the web browser tried to access the address 127.0.0.1, the internal IP address of the chrome-server container, but it should instead use the host of the web container where the Rails application is running.
 
 ## Step 5: Fix Capybara's configuration
 
-We need to change two settings from Capybara to fix the failing tests.
+We need to change two settings in Capybara to fix the failing tests.
 
-The first is the server host. By default, Rails binds the server to the IP address 127.0.0.1, which is only locally accessible, making it impossible for the web browser running in another container to access the Rails application. To fix that, we set Capybara's `server_host` to 0.0.0.0, which is accessible over the network.
+The first is the `server_host`. By default, Rails binds the server to the IP address 127.0.0.1, which is only locally accessible, making it impossible for the web browser running in another container to access the Rails application. To fix that, we set Capybara's `server_host` to 0.0.0.0, which is accessible over the network.
 
 The second attribute we need to change is the `app_host`, which defaults to the `server_host`. The problem is that the address 0.0.0.0 in the web browser container doesn't point to the Rails application. So we set `app_host` to the address of the web service by using the `HOSTNAME` environment variable plus the port chosen by Capybara.
 
@@ -249,7 +251,7 @@ We can now access [localhost:7900](http://localhost:7900/) and see a page that l
 
 When we click on the button "Connect", we can fill in the password with "secret" and move on.
 
-We can now rerun the system tests and watch it interacting with the web browser via the VNC client:
+We can now rerun the system tests and watch the test execution in the browser:
 
 ```shell
 docker-compose run web bin/rails test:system
@@ -287,7 +289,7 @@ services:
       - "7901:7900"
 ```
 
-Next, we parameterize the Selenium configuration to pick the browser for the test based on an environment variable:
+Next, we parameterize with an environment variable the browser that the tests should use:
 
 ```ruby
 # ./test/application_system_test_case.rb
@@ -299,13 +301,13 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 end
 ```
 
-Finally, we can pass the desired browser as an environment variable in the command we use to execute the tests:
+Finally, we can adjust the command that runs the tests to include an argument to specify the desired browser:
 
 ```shell
-# Test with Firefox
+# Run tests with Firefox
 docker-compose run --env TEST_BROWSER=firefox web bin/rails test:system
 
-# Test with Chrome
+# Run tests with Google Chrome
 docker-compose run --env TEST_BROWSER=chrome web bin/rails test:system
 ```
 
