@@ -9,35 +9,35 @@ Rails supports many different types of automated tests to give developers a safe
 
 The [Rails Guides website](https://guides.rubyonrails.org/testing.html) provides detailed documentation of all types of automated tests supported by the framework.
 
-[System testing](https://guides.rubyonrails.org/testing.html#system-testing) is one of the options we have to cover our codebase with automated testing. System tests use a web browser to exercise the Rails application from the end-user perspective.
+[System testing](https://guides.rubyonrails.org/testing.html#system-testing) is one of the options we have to cover our codebase with automated tests. System tests use a web browser to exercise the Rails application from the end-user perspective.
 
 Compared to other types of tests, system tests give us the highest level of confidence that the application works as expected. But, on the other hand, they usually take longer to execute.
 
-There are many moving parts involved when running a system test. [Avdi Grimm](https://twitter.com/avdi) did a great job in the blog post ["Rails 6 System Tests, from Top to Bottom"](https://avdi.codes/rails-6-system-tests-from-top-to-bottom/) where he unravels all the components involved in a system test and how they collaborate to test Rails applications from end-to-end.
+There are many moving parts involved in running a system test. [Avdi Grimm](https://twitter.com/avdi) did a great job in the blog post ["Rails 6 System Tests, from Top to Bottom"](https://avdi.codes/rails-6-system-tests-from-top-to-bottom/) where he unravels all the components involved in a system test and how they collaborate to test Rails applications from end-to-end.
 
 The list below summarizes the blog post mentioned above, but reading the original text is highly recommended.
 
 The list of components involved in running system tests are:
 
 - The web browser: Chrome, Firefox, and others.
-- [WebDriver](https://www.selenium.dev/documentation/webdriver/): a software program that allows us to interact with a browser programmatically. Each browser has its own WebDriver implementation, like [ChromeDriver](https://chromedriver.chromium.org/), [GeckoDriver (for Firefox)](https://firefox-source-docs.mozilla.org/testing/geckodriver/) and others. The gem [webdrivers](https://github.com/titusfortner/webdrivers) installs the WebDrivers in the host machine, and Rails includes this gem by default in the Gemfile when generating an application.
+- [WebDriver](https://www.selenium.dev/documentation/webdriver/): a software program that allows us to interact with a browser programmatically. Each browser has its own WebDriver implementation, like [ChromeDriver](https://chromedriver.chromium.org/), [GeckoDriver (for Firefox)](https://firefox-source-docs.mozilla.org/testing/geckodriver/) and others. Rails includes a gem called [webdrivers](https://github.com/titusfortner/webdrivers) by default in the `Gemfile` when generating an application, this gem installs the WebDrivers required to run the system tests.
 - [selenium-webdriver](https://rubygems.org/gems/selenium-webdriver/versions/2.53.4): a Ruby gem that provides an interface to interact with any WebDriver.
-- [Capybara](https://github.com/teamcapybara/capybara): a Ruby gem that runs the Rails application under test and provides a better interface on top of `selenium-webdriver` to write tests that interact with a web browser.
+- [Capybara](https://github.com/teamcapybara/capybara): a Ruby gem that runs the Rails application under test and provides a better interface on top of selenium-webdriver to write tests that interact with a web browser.
 - [MiniTest](https://github.com/seattlerb/minitest): the default test framework shipped in Rails.
 
 Running system tests from a containerized Rails application is not straightforward since, most likely, the Docker image used to run the Rails application won't have a web browser installed to execute the system test.
 
 There are a few options to solve this problem. For example, we could install a web browser in the Docker image of the Rails application or configure Rails to use a web browser installed in the host machine. Avdi Grimm wrote about the later approach in the blog post ["Run Rails 6 system tests in Docker using a host browser"](https://avdi.codes/run-rails-6-system-tests-in-docker-using-a-host-browser/).
 
-This tutorial will follow a different approach. We will define a separate container to run the web browser and its respective WebDriver. The gem `selenium-webdriver` will point to the address of the new container so it can interact with the browser.
+This tutorial will follow a different approach. We will define a separate container to run the web browser and its respective WebDriver. The gem selenium-webdriver will point to the address of this container so it can interact with the browser.
 
 ![app-container-web-browser-container](/assets/img/posts/2022-02-25-rails-system-tests-with-docker/app-container-web-browser-container.png)
 
 The image above illustrates how it will work. The application container will host two processes, one running the Rails application (initialized by Capybara) and the other running the system tests. First, the system test will reach out to the web browser container to send a command (1). Then, in the web browser container, the WebDriver will receive this command and execute the action in the web browser, which will perform a request to the application container (2). Finally, the Rails application will receive and respond to the request (3).
 
 This approach is superior to the others mentioned above because:
-We don't bloat the Docker image of the Rails application with web browsers that are only needed to run system tests.
-We don't need to install web browsers on the host machine.
+1. We don't bloat the Docker image of the Rails application with web browsers that are only needed to run system tests.
+1. We don't need to install web browsers on the host machine.
 
 The following image illustrates where each component that plays a role in running system tests will reside:
 
@@ -48,7 +48,7 @@ The following image illustrates where each component that plays a role in runnin
 The following is the `docker-compose.yml` file we will start with:
 
 ```yaml
-./docker-compose.yml
+# ./docker-compose.yml
 services:
   web:
     build: .
@@ -93,11 +93,17 @@ We can now try to run the system tests generated by Rails:
 docker-compose run web bin/rails test:system
 ```
 
-The output is an error message saying, `Failed to find Chrome binary. (Webdrivers::BrowserNotFound)`. The gem `webdrivers` raised this error message because it couldn't find Chrome installed in the container.
+The output is an error message that says:
 
-## Step 2: Exclude the gem `webdrivers` from the list of dependencies
+```
+Failed to find Chrome binary. (Webdrivers::BrowserNotFound)
+```
 
-Since we will install Chrome and its respective WebDriver in a separate container, we don't need the gem `webdrivers` in the project:
+The gem webdrivers raised this error message because it couldn't find Chrome installed in the container.
+
+## Step 2: Exclude the gem webdrivers from the list of dependencies
+
+Since we will install Chrome and its respective WebDriver in a separate container, we don't need the gem webdrivers in the project:
 
 ```ruby
 # ./Gemfile
@@ -111,11 +117,15 @@ After removing the dependency and rebuilding the Docker container, we can try to
 docker-compose run web bin/rails test:system
 ```
 
-The output this time will have a different error saying `Unable to find chromedriver. Please download the server from...`.
+The output this time will have a different error that says:
 
-## Step 3: Point `selenium-webdriver` to a remote server
+```
+Unable to find chromedriver. Please download the server from...
+```
 
-By default, `selenium-webdriver` will try to connect to a WebDriver in localhost. So let's change that to point it to a remote address:
+## Step 3: Point selenium-webdriver to a remote server
+
+By default, selenium-webdriver will try to connect to a WebDriver in localhost. So let's change that to point it to a remote address:
 
 ```ruby
 # ./test/application_system_test_case.rb
@@ -125,7 +135,7 @@ driven_by :selenium, using: :chrome, screen_size: [1400, 1400], options: {
 }
 ```
 
-The host `chrome-server:4444` doesn't exist yet, but this will be the address of the Chrome WebDriver we will make available for our tests.
+The host chrome-server:4444 doesn't exist yet, but this will be the address of the Chrome WebDriver we will make available for our tests.
 
 Let's try to rerun the system tests:
 
@@ -133,13 +143,17 @@ Let's try to rerun the system tests:
 docker-compose run web bin/rails test:system
 ```
 
-Once more, we get an error, but this time it says `Failed to open TCP connection to chrome-server:4444 (getaddrinfo: Name or service not known)`.
+Once more, we get an error, but this time it says:
+
+```
+Failed to open TCP connection to chrome-server:4444 (getaddrinfo: Name or service not known)
+```
 
 ## Step 4: Introduce a container to run the web browser
 
 The Selenium team maintains a [list of Docker images](https://hub.docker.com/u/selenium) for running web browsers inside containers.
 
-The image [selenium/standalone-chrome](https://hub.docker.com/r/selenium/standalone-chrome) includes Google Chrome and its respective WebDriver, which by default runs on port 4444 as we configured in the step before. We will use this image to define a new docker-compose service we will call `chrome-server` and link it to the `web` service:
+The image [selenium/standalone-chrome](https://hub.docker.com/r/selenium/standalone-chrome) includes Google Chrome and its respective WebDriver, which by default runs on port 4444 as we configured in the step before. We will use this image to define a new docker-compose service we will call chrome-server and link it to the web service:
 
 ```yaml
 # ./docker-compose.yml
@@ -183,9 +197,9 @@ This screenshot proves that the system test successfully interacted with the web
 
 We need to change two settings from Capybara to fix the failing tests.
 
-The first is the server host. By default, Rails binds the server to the IP address `127.0.0.1`, which is only locally accessible, making it impossible for the web browser running in another container to access the Rails application. To fix that, we set Capybara's `server_host` to `0.0.0.0`, which is accessible over the network.
+The first is the server host. By default, Rails binds the server to the IP address 127.0.0.1, which is only locally accessible, making it impossible for the web browser running in another container to access the Rails application. To fix that, we set Capybara's `server_host` to 0.0.0.0, which is accessible over the network.
 
-The second attribute we need to change is the `app_host`, which defaults to the `server_host`. The problem is that the address `0.0.0.0` in the web browser container doesn't point to the Rails application. So we set `app_host` to the address of the `web` service by using the `HOSTNAME` environment variable plus the port chosen by Capybara.
+The second attribute we need to change is the `app_host`, which defaults to the `server_host`. The problem is that the address 0.0.0.0 in the web browser container doesn't point to the Rails application. So we set `app_host` to the address of the web service by using the `HOSTNAME` environment variable plus the port chosen by Capybara.
 
 ```ruby
 # ./test/test_helper.rb
@@ -203,7 +217,7 @@ docker-compose run web bin/rails test:system
 
 The Docker image we are using to run the web browser contains a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) software installed, enabling us to peek into what is happening in the browser running in the container.
 
-To enable this feature, we have to change the service `chrome-server` to expose the port `7900`, where the VNC client runs:
+To enable this feature, we have to change the service chrome-server to expose the port 7900, where the VNC client runs:
 
 ```yaml
 # ./docker-compose.yml
