@@ -20,7 +20,7 @@ The list below summarizes the blog post mentioned above, but reading the origina
 The list of components involved in running system tests are:
 
 - The web browser: Chrome, Firefox, and others.
-- [WebDriver](https://www.selenium.dev/documentation/webdriver/): a software program that allows us to interact with a browser programmatically. Each browser has its own WebDriver implementation, like [ChromeDriver](https://chromedriver.chromium.org/), [GeckoDriver (for Firefox)](https://firefox-source-docs.mozilla.org/testing/geckodriver/) and others. Rails includes a gem called [webdrivers](https://github.com/titusfortner/webdrivers) by default in the `Gemfile` when generating an application, this gem installs the WebDrivers required to run the system tests.
+- [WebDriver](https://www.selenium.dev/documentation/webdriver/): a software program that allows us to interact with a browser programmatically. Each browser has its own WebDriver implementation, like [ChromeDriver](https://chromedriver.chromium.org/), [GeckoDriver (for Firefox)](https://firefox-source-docs.mozilla.org/testing/geckodriver/) and others. Rails includes a gem called [webdrivers](https://github.com/titusfortner/webdrivers) by default in the `Gemfile` when generating an application. This gem installs the WebDrivers required to run the system tests.
 - [selenium-webdriver](https://rubygems.org/gems/selenium-webdriver/versions/2.53.4): a Ruby gem that provides an interface to interact with any WebDriver.
 - [Capybara](https://github.com/teamcapybara/capybara): a Ruby gem that runs the Rails application under test and provides a better interface on top of selenium-webdriver to write tests that interact with a web browser.
 - [MiniTest](https://github.com/seattlerb/minitest): the default test framework shipped in Rails.
@@ -217,7 +217,7 @@ docker-compose run web bin/rails test:system
 
 The Docker image we are using to run the web browser contains a [VNC](https://en.wikipedia.org/wiki/Virtual_Network_Computing) software installed, enabling us to peek into what is happening in the browser running in the container.
 
-To enable this feature, we have to change the service chrome-server to expose the port 7900, where the VNC client runs:
+To enable this feature, we have to change the service chrome-server to expose port 7900, where the VNC client runs:
 
 ```yaml
 # ./docker-compose.yml
