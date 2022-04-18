@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "Leveraging OpenAPI specification to validate requests and responses with Committee"
-share-description: This tutorial shows how to use the OpenAPI specification to validate requests and responses in a Rails application using Committee.
-tags: ruby rails openapi api tutorial
+title:  "Validating requests and responses using OpenAPI specification with Committee"
+share-description: This tutorial shows how to reuse the OpenAPI specification to validate requests and responses in a Rails application using the gem Committee.
+tags: ruby rails openapi apis tutorial
 ---
 
 The [OpenAPI Specification](https://spec.openapis.org/oas/latest.html) (OAS) is a machine-readable standard for describing APIs developed by a consortium under the Linux Foundation.
@@ -22,15 +22,15 @@ When we use OAS, we create a JSON or YAML file following a specific structure to
 
 Creating these files is not hard, as we will see later in this tutorial. However, avoiding duplication of knowledge between the specification and the implementation of the API is not straightforward.
 
-In one of the projects we built at [door2door](https://door2door.io/en/), the API validated the payload of incoming requests before processing them. This validation happened inside the handler of the request that checks for the presence of specific attributes. After introducing OAS to this project, we noticed that the schema that specifies a valid request was duplicated between the request validation in the Ruby code and the specification.
+In one of the projects we built at [door2door](https://door2door.io/en/), the API validated the payload of incoming requests before processing them. This validation happened inside the handler of the request that checks for the presence of required attributes. After introducing OAS to this project, we noticed that the schema that specifies a valid request was duplicated between the request validation in the Ruby code and the specification.
 
-In the same project, we had automated tests to make requests to the API and check if the response matched the expected schema. With the introduction of OAS to the project, we duplicated the response schemas between the tests and the specification.
+In the same project, we had automated tests to make requests to the API and check if the response matched the expected schema using [json-schema](https://github.com/voxpupuli/json-schema). With the introduction of OAS to the project, we duplicated the response schemas between the tests and the specification.
 
-The duplication of knowledge between implementation and specification smelled pretty bad, but, fortunately, we came across the Ruby gem [Committee](https://github.com/interagent/committee), which was capable of transforming the OAS into the single source of truth for our API, and so obliterating all knowledge duplication.
+The duplication of knowledge between implementation and specification had a pretty [bad smell](https://martinfowler.com/bliki/CodeSmell.html), but, fortunately, we came across the Ruby gem [Committee](https://github.com/interagent/committee), which was capable of transforming the OAS into the single source of truth for our API, and so obliterating all knowledge duplication.
 
 We can add Committee to any Rack-based web application, and it will intercept every request and response entering and leaving the system.
 
-Committee can then validate whether or not a request or response is valid according to an OAS we provide.
+Committee can then judge whether or not a request or response is valid according to an OAS we provide.
 
 If a request is invalid, Committee will respond with a standard or customized error to the API consumer, preventing the request from reaching the endpoint implementation.
 
@@ -286,7 +286,7 @@ end
 
 Notice that Committee only validates the responses of the endpoints listed in the specification. This allows us to introduce OAS and Committee to an existing project and gradually create specifications for the endpoints.
 
-For the TDD enthusiasts like me, we can use the exceptions raised by the `ResponseValidation` middleware in our tests to let the specification guide the development of new endpoints. The process could look like this:
+For the TDD enthusiasts like me, we can use the exceptions raised by the `ResponseValidation` middleware in our tests to let the specification guide the development. The process could look like this:
 1. Change the OAS
 2. Run a test that exercises the endpoint in question and see it failing
 3. Write the code to make the test pass
@@ -295,7 +295,7 @@ For the TDD enthusiasts like me, we can use the exceptions raised by the `Respon
 
 ### Step 3: Use Committee as a monitoring agent
 
-Let's repeat the process from the previous step and document one more endpoint in the specification:
+Let's repeat the process from the previous steps and document one more endpoint in the specification:
 
 ```yaml
 # ./docs/openapi.yaml
@@ -359,9 +359,9 @@ module App
 end
 ```
 
-We set `ignore_error` to true to prevent Committee from responding to the request with an error message.
+We set `ignore_error: true` to prevent Committee from responding to the request with an error message.
 
-If we start the Rails project and perform a request to the endpoint `GET /cities/:id`, we will receive a successful response from the API, even though the body doesn't conform with the specification, and Rails will log the error message.
+If we start the Rails project and perform a request to the endpoint `GET /cities/:id`, we will receive a successful response from the API, even though the body doesn't conform to the specification, and Rails will log the error message.
 
 We can further customize the `ResponseValidation` middleware with other options we can find in [Committee's official documentation](https://github.com/interagent/committee#configuration-options-1).
 
@@ -388,9 +388,9 @@ module App
 end
 ```
 
-### Step 2: Describe the request body for `POST /cities`
+### Step 2: Describe the request body of `POST /cities`
 
-Similar to the response validation, Committee won't validate requests of endpoints that don't have their request described in the OAS. So let's go ahead and specify the expected request body of the request that creates a city:
+Similar to the response validation, Committee won't validate requests of endpoints that don't have their request described in the OAS. So let's go ahead and specify the expected request body for creating a city:
 
 ```yaml
 paths:
@@ -412,7 +412,7 @@ paths:
                 - city
 ```
 
-If we start the Rails application and try to make a request to this endpoint with a missing attribute in the city object:
+If we start the Rails application and try to make a request to `POST /cities` with a missing attribute in the city object like in the payload below:
 
 ```json
 {
@@ -436,12 +436,12 @@ The API will respond with a status code `400 (Bad request)` and the following bo
 
 ### Step 3: Customize the error response
 
-We can customize the error response by providing the option `error_class` in the middleware configuration.
+We can customize the error response the API returns to invalid requests by providing the option `error_class` in the middleware configuration.
 
 This option takes a class that must respond to the method `#render`, which has to return an array containing three elements: the response's status code, headers, and body. We can implement our own class to customize the error response inheriting from `Committee::ValidationError`:
 
 ```ruby
-# ./config/application
+# ./config/application.rb
 
 module App
   class ValidationError < Committee::ValidationError
@@ -470,8 +470,8 @@ end
 
 When we inherit from `Committee::ValidationError`, the instances of our error class will have access to three methods:
 - `status`: the HTTP status code assigned by Committee to the response (e.g., 400).
-- `id`: the description of `status` (e.g. `bad_request`)
-- `message`: `the error message generated by the middleware
+- `id`: the description of `status` (e.g. `bad_request`).
+- `message`: the error message generated by the middleware.
 
 We can then use the class we created above in the middleware configuration:
 
@@ -505,3 +505,10 @@ That's it for validating requests. We can now rely on Committee to intercept inv
 
 ## Final thoughts
 
+Using OAS to describe an API is a natural choice, and with Committee, we can stop duplicating knowledge between the specification and the implementation.
+
+We can also use Committee to support our TDD process by writing the specification first, seeing a test fail because the API response doesn't conform to the OAS, and finally changing the code to make the test pass.
+
+I haven't benchmarked the performance impact that Committee has on my projects. Since I'm using both middlewares to intercept requests and responses, performance must have a toll, but it has been negligible.
+
+At the end of the day, Committee is simple to set up, it is easy to understand, it includes a short list of dependencies, and the project is under active development by the community. Everything that makes a library great to add to your project.
