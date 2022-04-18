@@ -135,7 +135,7 @@ driven_by :selenium, using: :chrome, screen_size: [1400, 1400], options: {
 }
 ```
 
-The address chrome-server:4444 doesn't exist yet, but this where we will make the Chrome WebDriver available for our tests later on.
+The address chrome-server:4444 doesn't exist yet, but this is where we will make the Chrome WebDriver available for our tests later on.
 
 Let's try to rerun the system tests:
 
