@@ -46,6 +46,7 @@ Before building the new Docker image, let's create a file named `docker-compose.
 services:
   web:
     build:
+      context: ./
       dockerfile: Dockerfile-dev
     ports:
       - "3000:3000"
@@ -131,6 +132,7 @@ Before we go, let's define a command for our main container, so we can start the
 services:
   web:
     build:
+      context: ./
       dockerfile: Dockerfile-dev
     ports:
       - "3000:3000"
