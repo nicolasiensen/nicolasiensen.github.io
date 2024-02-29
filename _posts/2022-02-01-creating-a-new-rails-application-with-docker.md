@@ -118,6 +118,7 @@ From the host machine, we can now run `docker-compose build` to build the new im
 After that, we can then access a new terminal session in the Docker container and start the Rails application:
 
 ```sh
+docker-compose build
 docker-compose run --service-ports web bash
 rails s -b 0.0.0.0
 ```
